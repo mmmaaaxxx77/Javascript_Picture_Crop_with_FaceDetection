@@ -6,7 +6,7 @@ http://johnnydecode.com/demo/piccrop/example.html
 
 ### 參考
 - jquery-select-areas
-https://github.com/jwagner/smartcrop.js/
+https://github.com/360Learning/jquery-select-areas
 - smartcrop.js
 https://github.com/jwagner/smartcrop.js/
 
