@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Demo Select Areas</title>
+  <link rel="stylesheet" href="resources/cropper.css">
+  <style>
+    .container {
+      max-width: 960px;
+      margin: 20px auto;
+    }
+
+    img {
+      max-width: 100%;
+    }
+
+    .row,
+    .preview {
+      overflow: hidden;
+    }
+
+    .col {
+      float: left;
+    }
+
+    .col-6 {
+      width: 50%;
+    }
+
+    .col-3 {
+      width: 25%;
+    }
+
+    .col-2 {
+      width: 16.7%;
+    }
+
+    .col-1 {
+      width: 8.3%;
+    }
+
+    button{
+      width:50px;
+      height:30px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Demo Select Areas</h1>
+    <h3>說明:</h3>
+    <p>
+      1. 自動偵測照片該尺寸最好的位置<br/>
+      2. 選擇比例, 可調整選擇區塊大小, 比例固定<br/>
+      3. 可選擇其他圖片檔案測試
+    </p>
+
+    <form>
+        <h3>選擇圖片檔案</h3>
+        <input style="width:80%" type="file" name="file" accept="image/*" >
+    </form>
+    <h3>選擇比例</h3>
+    <p>
+      <button onClick="changAspectRatio(16/9)">16:9</button>
+      <button onClick="changAspectRatio(4/3)">4:3</button>
+      <button onClick="changAspectRatio(1/1)">1:1</button>
+      <button onClick="changAspectRatio(2/3)">2:3</button>
+    </p>
+    <p id="detail"></p>
+    <div class="row">
+      <div class="col col-6">
+        <img id="image" src="" alt="Picture">
+      </div>
+      <div class="col col-3">
+        <div class="preview"></div>
+      </div>
+      <div class="col col-2">
+        <div class="preview"></div>
+      </div>
+      <div class="col col-1">
+        <div class="preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script>
+  <script src="resources/cropper.js"></script>
+  <script src="resources/smartcrop.js" type="text/javascript"></script>
+  <script>
+
+    var nowFile = null;
+
+    $(function () {
+
+      initDefaultImg();      
+
+      // bind
+      $('input[type=file]').change(function(e) { handleFiles(this.files); });
+
+    });
+
+    function changAspectRatio(ratio){
+      $('#image').cropper('setAspectRatio', ratio);
+      setSmartScrop();
+    }
+
+    function handleFiles(files) {
+
+      if (files.length > 0) {
+        var file = files[0];
+        if (typeof FileReader !== 'undefined' && file.type.indexOf('image') != -1) {
+          var reader = new FileReader();
+
+          reader.onload = function(e) {
+            // 處理img檔案
+            //$("#image").attr("src", e.target.result);
+            nowFile = e.target.result;
+            $('#image').cropper('replace', e.target.result);
+            setSmartScrop();
+
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    }
+  
+    function initDefaultImg(){
+
+      var defaultPicUrl = "http://img3.cache.netease.com/tech/2014/3/4/201403041328284823d_550.png";
+
+      var request = new XMLHttpRequest();
+      request.open('GET', defaultPicUrl, true);
+      request.responseType = 'blob';
+      request.onload = function() {
+          var reader = new FileReader();
+          reader.readAsDataURL(request.response);
+          reader.onload =  function(e){
+              nowFile = e.target.result;
+              $("#image").attr("src", e.target.result);
+              initCropper();
+              setSmartScrop(e.target.result);
+          };
+      };
+      request.send();
+    }
+
+    var $previews = $('.preview');
+
+    function initCropper(){      
+
+      // cropper
+      $('#image').cropper({
+          zoomable : false,
+          aspectRatio : 16 / 9,
+          minContainerWidth : 50,
+          minCanvasWidth : 50,
+          ready: function (e) {
+            var $clone = $(this).clone().removeClass('cropper-hidden');
+
+            $clone.css({
+              display: 'block',
+              width: '100%',
+              minWidth: 0,
+              minHeight: 0,
+              maxWidth: 'none',
+              maxHeight: 'none'
+            });
+
+            $previews.css({
+              width: '100%',
+              overflow: 'hidden'
+            }).html($clone);
+          },
+
+          crop: function (e) {
+
+            var detail = "x:" + Math.floor(e.x) + ", y:" + Math.floor(e.y) + ", width:" + Math.floor(e.width) + ", height:" + Math.floor(e.height);
+            $("#detail").text(detail);
+
+            // 控制縮圖
+            var imageData = $(this).cropper('getImageData');
+            var previewAspectRatio = e.width / e.height;
+
+            $previews.each(function () {
+              var $preview = $(this);
+              var previewWidth = $preview.width();
+              var previewHeight = previewWidth / previewAspectRatio;
+              var imageScaledRatio = e.width / previewWidth;
+
+              $preview.height(previewHeight).find('img').css({
+                width: imageData.naturalWidth / imageScaledRatio,
+                height: imageData.naturalHeight / imageScaledRatio,
+                marginLeft: -e.x / imageScaledRatio,
+                marginTop: -e.y / imageScaledRatio
+              });
+            });
+            // 控制縮圖end
+
+          }
+      });
+      // cropper end  
+    }
+
+    function setSmartScrop(){
+
+        var cropBox = $('#image').cropper('getCropBoxData');
+        // picture smartcrop
+        img = new Image();
+        img.onload = function() {
+          smartcrop.crop(img, {width: cropBox.width, height: cropBox.height, ruleOfThirds:false}).then(function(result){
+              console.log(result);
+              $('#image').cropper('setCropBoxData', {"left":result.topCrop.x, "top":result.topCrop.y});
+          });
+        };
+
+        img.src = nowFile;
+    }
+
+  </script>
+</body>
+</html>
