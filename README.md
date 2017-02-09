@@ -1,5 +1,3 @@
-# Javascript_Picture_Crop_with_FaceDetection
-
 # Demo 1
 javascript偵測人臉並給予指定大小最好的位置
 
@@ -15,7 +13,7 @@ https://github.com/jwagner/smartcrop.js/
 # Demo 2
 javascript偵測人臉並給予指定大小最好的位置, cropbox可調整大小, 比例不變
 
-### Demo
+### 線上Demo
 http://johnnydecode.com/demo/piccrop2/example.html
 
 ### 參考
