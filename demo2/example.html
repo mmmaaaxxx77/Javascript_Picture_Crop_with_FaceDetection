@@ -51,12 +51,6 @@
 
   <div class="container">
     <h1>Image Selector</h1>
-    <h3>說明:</h3>
-    <p>
-      1. 自動偵測照片該尺寸最好的位置<br/>
-      2. 選擇比例, 可調整選擇區塊大小, 比例固定<br/>
-      3. 可選擇其他圖片檔案測試
-    </p>
 
     <form>
         <h3>選擇圖片檔案</h3>
@@ -88,24 +82,6 @@
         </div>
         預覽
       </div>
-      <div class="col col-3">
-        <div>
-          <div class="preview"></div>
-        </div>
-        25%
-      </div>
-      <div class="col col-2">
-        <div>
-          <div class="preview"></div>
-        </div>
-        15%
-      </div>
-      <div class="col col-1">
-        <div>
-          <div class="preview"></div>
-        </div>
-        10%
-      </div>
     </div>
     <h3>下載選取範圍圖片 (原始大小縮放比)</h3>
     <p>
@@ -116,6 +92,7 @@
       <button onClick="downloadImage(0.1);">10%</button>
       <button onClick="downloadImage('150px');">150px:150px</button>
     </p>
+    <img id="resultImg" src="" alt="result">
   </div>
 
   <!-- Scripts -->
@@ -182,7 +159,7 @@
               nowFile = e.target.result;
               $("#image").attr("src", e.target.result);
               initCropper();
-              setSmartScrop(e.target.result);
+              setSmartScrop(e.target.result);              
           };
       };
       request.send();
@@ -218,6 +195,7 @@
             }).html($clone);
 
             $('#image').cropper('moveTo', 0);
+            //downloadImage(1);
           },
 
           crop: function (e) {
@@ -317,7 +295,7 @@
       image2.src = canvas.toDataURL("image/png");
       var image_data = atob(image2.src.split(',')[1]);
       // Use typed arrays to convert the binary data to a Blob
-      var arraybuffer = new ArrayBuffer(image_data.length);
+      /*var arraybuffer = new ArrayBuffer(image_data.length);
       var view = new Uint8Array(arraybuffer);
       for (var i=0; i<image_data.length; i++) {
           view[i] = image_data.charCodeAt(i) & 0xff;
@@ -339,7 +317,10 @@
       link.download = "resize_image_" + width + "x" + height + ".png";
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      document.body.removeChild(link);*/
+
+      //
+      $("#resultImg").attr("src", image2.src);
     }
 
   </script>
