@@ -311,11 +311,31 @@
       var ctx = canvas.getContext("2d");
       ctx.drawImage(image,0,0, width, height);
 
+      // atob to base64_decode the data-URI
+      var image2 = new Image();
+      image2.src = canvas.toDataURL("image/png");
+      var image_data = atob(image2.src.split(',')[1]);
+      // Use typed arrays to convert the binary data to a Blob
+      var arraybuffer = new ArrayBuffer(image_data.length);
+      var view = new Uint8Array(arraybuffer);
+      for (var i=0; i<image_data.length; i++) {
+          view[i] = image_data.charCodeAt(i) & 0xff;
+      }
+      try {
+          var blob = new Blob([arraybuffer], {type: 'application/octet-stream'});
+      } catch (e) {
+          var bb = new (window.WebKitBlobBuilder || window.MozBlobBuilder);
+          bb.append(arraybuffer);
+          var blob = bb.getBlob('application/octet-stream'); // <-- Here's the Blob
+      }
+
+      var url = (window.webkitURL || window.URL).createObjectURL(blob);
+      //location.href = url;
+
       var link = document.createElement('a');
       link.style = 'position: fixed; left -10000px;'; // making it invisible
-      link.href = canvas.toDataURL("image/png");
+      link.href = url;
       link.download = "resize_image_" + width + "x" + height + ".png";
-      /* file extension is very important! */
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
