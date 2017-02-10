@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Demo Select Areas</title>
+  <title>Image Selector</title>
   <link rel="stylesheet" href="resources/cropper.css">
   <style>
     .container {
@@ -34,15 +34,15 @@
     }
 
     .col-2 {
-      width: 16.7%;
+      width: 15%;
     }
 
     .col-1 {
-      width: 8.3%;
+      width: 10%;
     }
 
     button{
-      width:50px;
+      width:100px;
       height:30px;
     }
   </style>
@@ -50,7 +50,7 @@
 <body>
 
   <div class="container">
-    <h1>Demo Select Areas</h1>
+    <h1>Image Selector</h1>
     <h3>說明:</h3>
     <p>
       1. 自動偵測照片該尺寸最好的位置<br/>
@@ -64,26 +64,58 @@
     </form>
     <h3>選擇比例</h3>
     <p>
+      <button onClick="changAspectRatio(1/1, 150, 150)">150px:150px</button>
       <button onClick="changAspectRatio(16/9)">16:9</button>
       <button onClick="changAspectRatio(4/3)">4:3</button>
       <button onClick="changAspectRatio(1/1)">1:1</button>
       <button onClick="changAspectRatio(2/3)">2:3</button>
     </p>
-    <p id="detail"></p>
-    <div class="row">
+    <p id="detail">
+
+    </p>
+    <h3>目前選取區域</h3>
+    <p>
+      x: <input type="text" value="" id="x" class="detail"/>
+      y: <input type="text" value="" id="y" class="detail"/>
+      width(px): <input type="text" value="" id="width" class="detail"/>
+      height(px): <input type="text" value="" id="height" class="detail"/>
+      <button onClick="setImage()">手動設定</button>
+    </p>
+    <div class="row">      
       <div class="col col-6">
-        <img id="image" src="" alt="Picture">
+        <div>
+          <img id="image" src="" alt="Picture">
+        </div>
+        預覽
       </div>
       <div class="col col-3">
-        <div class="preview"></div>
+        <div>
+          <div class="preview"></div>
+        </div>
+        25%
       </div>
       <div class="col col-2">
-        <div class="preview"></div>
+        <div>
+          <div class="preview"></div>
+        </div>
+        15%
       </div>
       <div class="col col-1">
-        <div class="preview"></div>
+        <div>
+          <div class="preview"></div>
+        </div>
+        10%
       </div>
     </div>
+    <h3>下載選取範圍圖片 (原始大小縮放比)</h3>
+    <p>
+      <button onClick="downloadImage(1);">100%</button>      
+      <button onClick="downloadImage(0.5);">50%</button>
+      <button onClick="downloadImage(0.25);">25%</button>
+      <button onClick="downloadImage(0.15);">15%</button>
+      <button onClick="downloadImage(0.1);">10%</button>
+      <button onClick="downloadImage('150px');">150px:150px</button>
+    </p>
   </div>
 
   <!-- Scripts -->
@@ -93,6 +125,7 @@
   <script>
 
     var nowFile = null;
+    var nowRatio = 16/9;
 
     $(function () {
 
@@ -101,10 +134,16 @@
       // bind
       $('input[type=file]').change(function(e) { handleFiles(this.files); });
 
+      $('.download').on("click", function(){
+        downloadImage();
+      });
+
     });
 
-    function changAspectRatio(ratio){
+    function changAspectRatio(ratio, width, height){ 
+      nowRatio = ratio;     
       $('#image').cropper('setAspectRatio', ratio);
+      $('#image').cropper('setData', {"width":width, "height":height});
       setSmartScrop();
     }
 
@@ -120,6 +159,7 @@
             //$("#image").attr("src", e.target.result);
             nowFile = e.target.result;
             $('#image').cropper('replace', e.target.result);
+            $('#image').cropper('moveTo', 0);
             setSmartScrop();
 
           };
@@ -156,8 +196,10 @@
       $('#image').cropper({
           zoomable : false,
           aspectRatio : 16 / 9,
-          minContainerWidth : 50,
-          minCanvasWidth : 50,
+          minContainerWidth : 0,
+          minCanvasWidth : 0,
+          minCanvasHeight : 0,
+          minCropBoxWidth : 0,
           ready: function (e) {
             var $clone = $(this).clone().removeClass('cropper-hidden');
 
@@ -174,12 +216,15 @@
               width: '100%',
               overflow: 'hidden'
             }).html($clone);
+
+            $('#image').cropper('moveTo', 0);
           },
 
           crop: function (e) {
 
-            var detail = "x:" + Math.floor(e.x) + ", y:" + Math.floor(e.y) + ", width:" + Math.floor(e.width) + ", height:" + Math.floor(e.height);
-            $("#detail").text(detail);
+            /var detail = "x:" + Math.floor(e.x) + ", y:" + Math.floor(e.y) + ", width:" + Math.floor(e.width) + ", height:" + Math.floor(e.height);*/
+            //$("#detail").text(detail);
+            setDetail(e);
 
             // 控制縮圖
             var imageData = $(this).cropper('getImageData');
@@ -198,11 +243,34 @@
                 marginTop: -e.y / imageScaledRatio
               });
             });
-            // 控制縮圖end
-
+            // 控制縮圖end            
           }
       });
-      // cropper end  
+      // cropper end        
+    }
+
+    function setDetail(data){
+        $("#x").val(Math.floor(data.x));
+        $("#y").val(Math.floor(data.y));
+        $("#width").val(Math.floor(data.width));
+        $("#height").val(Math.floor(data.height));
+    }
+
+    function setImage(){
+
+      var data = {
+        x : $("#x").val(),
+        y : $("#y").val(),
+        height : $("#height").val(),
+        width : $("#width").val()
+      }
+
+      $('#image').cropper('setData', {
+        "x":data.x*1,
+        "y":data.y*1,
+        "width":data.width*1,
+        "height":data.height*1
+      });
     }
 
     function setSmartScrop(){
@@ -212,12 +280,45 @@
         img = new Image();
         img.onload = function() {
           smartcrop.crop(img, {width: cropBox.width, height: cropBox.height, ruleOfThirds:false}).then(function(result){
-              console.log(result);
-              $('#image').cropper('setCropBoxData', {"left":result.topCrop.x, "top":result.topCrop.y});
+              //console.log(result);
+              $('#image').cropper('setData', {"x":result.topCrop.x, "y":result.topCrop.y});
           });
         };
 
         img.src = nowFile;
+    }
+
+    function downloadImage(scale){
+
+      if(scale == '150px'){
+        if(nowRatio != 1/1){
+          alert("下載150px:150px圖片, 長寬比必須選擇1:1或150px:150px");
+          return;
+        }
+      }
+
+      var img = $('#image').cropper('getCroppedCanvas');      
+      var imgData = img.toDataURL("image/png");
+
+      var image = new Image();
+      image.src = imgData;
+      var height = (scale == '150px')?150:image.height*scale;
+      var width = (scale == '150px')?150:image.width*scale;
+
+      var canvas = document.createElement('canvas');
+      canvas.height = height
+      canvas.width = width
+      var ctx = canvas.getContext("2d");
+      ctx.drawImage(image,0,0, width, height);
+
+      var link = document.createElement('a');
+      link.style = 'position: fixed; left -10000px;'; // making it invisible
+      link.href = canvas.toDataURL("image/png");
+      link.download = "resize_image_" + width + "x" + height + ".png";
+      /* file extension is very important! */
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
   </script>
