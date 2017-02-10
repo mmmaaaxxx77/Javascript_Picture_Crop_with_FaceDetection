@@ -290,18 +290,19 @@
 
     function downloadImage(scale){
 
-      if(scale == '150px'){
-        if(nowRatio != 1/1){
-          alert("下載150px:150px圖片, 長寬比必須選擇1:1或150px:150px");
-          return;
-        }
-      }
-
       var img = $('#image').cropper('getCroppedCanvas');      
       var imgData = img.toDataURL("image/png");
 
       var image = new Image();
       image.src = imgData;
+
+      if(scale == '150px'){
+        if(nowRatio != 1/1 || image.height != image.width){
+          alert("下載150px:150px圖片, 長寬比必須選擇1:1或150px:150px");
+          return;
+        }
+      }
+
       var height = (scale == '150px')?150:image.height*scale;
       var width = (scale == '150px')?150:image.width*scale;
 
